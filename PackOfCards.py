@@ -1,5 +1,5 @@
 import random
-import Card
+from Card import Card
 
 
 class PackOfCards:
@@ -7,7 +7,7 @@ class PackOfCards:
         self._number = 108
         self._pack_of_card = self._create_cards()
         self.card_colors = {0: 'red', 1: 'green', 2: 'yellow', 3: 'blue', 4: 'black'}
-        self._not_used_cards = set()
+        self._not_used_cards = set(self._pack_of_card)
         self._rand = random.Random()
 
     @staticmethod
@@ -27,8 +27,9 @@ class PackOfCards:
         if len(self._not_used_cards) == 0:
             return None
         while True:
-            index = self._rand.next(self._number)
+            index = self._rand.randint(0, self._number)
             if self._pack_of_card[index] in self._not_used_cards:
+                self._not_used_cards.remove(self._pack_of_card[index])
                 return self._pack_of_card[index]
 
     def add_cards(self, cards):

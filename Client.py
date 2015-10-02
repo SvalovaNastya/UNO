@@ -1,10 +1,12 @@
 import argparse
 import socket
-import Json
+import json
+from ConsoleUserInterface import CUI
 
 
 game_table = {}
 ui = None
+
 
 def parse_args():
     parser = argparse.ArgumentParser(prefix_chars='-/')
@@ -15,8 +17,8 @@ def parse_args():
 
 def run_game(conn):
     while True:
-        mess = conn.recvall()
-        mess = Json.load(mess)
+        mess = conn.recv(1024)
+        mess = json.loads(mess.decode("utf-8"), "utf-8")
         if mess["goal"] == 1:
             s, face, color = ui.make_step(mess['message'])
             if s == 's':
@@ -28,17 +30,17 @@ def run_game(conn):
                 ans = {'method': "pass_step"}
             else:
                 ans = {'method': "draw_card"}
-            a = Json.dump(ans)
-            conn.sendall(a)
+            a = json.dumps(ans)
+            conn.sendall(a.encode())
         elif mess["goal"] == 0:
-            ui.write_table(mess["players"], mess["whos_step"], mess["hand"], mess["direction"], mess["color"], mess["up_curd"])
-
-
+            print(mess)
+            ui.write_table(mess["players"], mess["whos_step"], mess["hand"], mess["direction"], mess["color"],
+                           mess["up_curd"])
 
 
 if __name__ == "__main__":
-
     args = parse_args()
     conn = socket.socket()
-    conn.connect((args['server_ip'], args['server_port']))
+    conn.connect((args.server_ip, args.server_port))
+    ui = CUI("Ann")
     run_game(conn)

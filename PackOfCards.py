@@ -1,4 +1,5 @@
 import random
+import Card
 
 
 class PackOfCards:
@@ -33,9 +34,3 @@ class PackOfCards:
     def add_cards(self, cards):
         for card in cards:
             self._not_used_cards.add(card)
-
-
-class Card:
-    def __init__(self, face_value, color):
-        self.face_value = face_value
-        self.color = color

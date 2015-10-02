@@ -112,7 +112,11 @@ class Arbiter:
 
     def create_map(self, player_num):
         map = {}
+        map["goal"] = 0
         map["hand"] = self.players[player_num].hand
+        map["whos_step"] = self.table.current_player
+        map["direction"] = self.table.clockwise
+        map["color"] = self.table.current_color
         map["players"] = [len(self.players[i].hand) for i in range(
             self.players[(player_num + self.table.players_number + 1) % self.table.players_number],
             self.players[(player_num + self.table.players_number - 1) % self.table.players_number])]

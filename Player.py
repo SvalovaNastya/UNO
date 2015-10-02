@@ -7,15 +7,19 @@ class Player:
         self.socket = socket
 
     def make_step(self, message):
-        self.socket.sendall(message)
-        data = self.socket.recv(2048)
+        ans = {}
+        ans["goal"] = 1
+        ans["message"] = message
+        ans = Json.dump(ans)
+        self.socket.sendall(ans)
+        data = self.socket.recvall()
         method_dict = Json.loads(data)
         method = []
         method[0] = method_dict["method"]
         if "card" in method_dict:
             method[1] = method_dict["card"]
         if "color" in method_dict:
-            method[2] = method_dict["clor"]
+            method[2] = method_dict["color"]
         return method
 
     def change_game_state(self, game_state):

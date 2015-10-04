@@ -10,7 +10,7 @@ class CUI:
         self.input_colors = {'r': 0, 'g': 1, 'y': 2, 'b': 3, 'k': 4}
         self.input_faces = {"0": 0, '1': 1, '2': 2, '3': 3, '4': 4, '5': 5, '6': 6, '7': 7, '8': 8, '9': 9, 'p': 10, 'r': 11,
                        't': 12, 'f': 13, 'c': 14}
-    def write_table(self, paticipants, whos_step, my_hand, direction, color, card):
+    def write_table(self, paticipants, whos_step, my_hand, direction, color, card, game_over):
         s = ''
         for i in range(len(paticipants)):
             s += paticipants[i]["name"] + ': ' + str(paticipants[i]["num"])
@@ -27,6 +27,8 @@ class CUI:
         s += 'my_hand' + '\n'
         for card in my_hand:
             s += '(' + self.faces[card["face_value"]] + ' ' + self.colors[card["color"]] + ") "
+        if game_over == "True":
+            s += "game over"
         print(s)
 
 

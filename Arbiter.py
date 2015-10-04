@@ -113,7 +113,7 @@ class Arbiter:
         game_position = {"goal": 0, "hand": [{'face_value': card.face_value, 'color': card.color} for card in self.players[player_num].hand],
                          "whos_step": self.table.current_player,
                          "direction": self.table.clockwise, "color": self.table.current_color,
-                         "up_curd": self.table.upper_card.face_value, "players": []}
+                         "up_curd": self.table.upper_card.face_value, "players": [], "game_over": self.game_over}
 
         for i in range(0, self.table.players_number):
             game_position["players"].append({
@@ -128,7 +128,7 @@ class Arbiter:
         return game_position
 
     def _make_step(self):
-        self.table.upper_card = self.pack_of_cards.get_card() #TODO: проверить на то, не сменить ли она цвет
+        self.table.upper_card = self.pack_of_cards.get_card() #TODO: проверить на то, не сменит ли она цвет
         self.table.current_color = self.table.upper_card.color
         for player in self.players:
             for i in range(4):
@@ -142,7 +142,6 @@ class Arbiter:
         while True:
             method = self.players[self.table.current_player].make_step(message)
             try:
-                m = None
                 if method[0] == "pass_step":
                     self.pass_step(players_req)
                     players_req = 0
@@ -161,11 +160,14 @@ class Arbiter:
                 else:
                     raise GameException("incorrect command")
 
+                self.game_over = self.check_for_over()
                 for player_num in range(len(self.players)):
                     game_position = self.create_map(player_num)
                     game_position = json.dumps(game_position)
                     self.players[player_num].change_game_state(game_position)
                 message = "Ваш ход"
+                if self.game_over:
+                    break
             except GameException as e:
                 if len(method) == 0:
                     players_req += 1
@@ -187,3 +189,9 @@ class Arbiter:
         s.bind(("0.0.0.0", 4000))
         s.listen(self.table.players_number)
         return s
+
+    def check_for_over(self):
+        for player in self.players:
+            if len(player.hand) == 0:
+                return True
+        return False

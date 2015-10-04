@@ -37,7 +37,7 @@ def run_game(conn):
         elif mess["goal"] == 0:
             # print(mess)
             ui.write_table(mess["players"], mess["whos_step"], mess["hand"], mess["direction"], mess["color"],
-                           mess["up_curd"])
+                           mess["up_curd"], mess["game_over"])
 
 
 if __name__ == "__main__":

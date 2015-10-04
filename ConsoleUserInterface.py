@@ -12,7 +12,6 @@ class CUI:
                        't': 12, 'f': 13, 'c': 14}
     def write_table(self, paticipants, whos_step, my_hand, direction, color, card):
         s = ''
-        # print(paticipants)
         for i in range(len(paticipants)):
             s += paticipants[i]["name"] + ': ' + str(paticipants[i]["num"])
             s += '; '
@@ -48,4 +47,4 @@ class CUI:
             if str[0] not in self.input_faces or str[1] not in self.input_colors:
                 print('incorrect command, print "help" for correct command\n')
                 continue
-            return "s", self.input_faces[int(str[0])], self.input_colors[int(str[1])]
+            return "s", self.input_faces[str[0]], self.input_colors[str[1]]

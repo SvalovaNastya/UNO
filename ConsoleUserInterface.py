@@ -40,7 +40,15 @@ class CUI:
                     face values: 0-9, p - pass step, r - revers, t - +2, f - +4, c - change color \n \
                     for instance : 0r or pass or draw")
             if str == 'pass' or str == "draw":
-                return str[0], None, None
+                return str, None, None
+            elif str[0] == 'f' or str[0] == 'c':
+                mess = "какой вы выбираете цвет?"
+                while True:
+                    m = input(mess)
+                    if m not in self.input_colors:
+                        mess = "такого цвета нет, введите другой"
+                        continue
+                    return "cc", self.input_faces[str[0]], self.input_colors[str[1]]
             if len(str) != 2:
                 print("error input print 'help'\n")
                 continue

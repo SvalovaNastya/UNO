@@ -14,11 +14,11 @@ class PackOfCards:
     def _create_cards():
         pack = []
         for color in range(4):
-            for face_value in range(14):
+            for face_value in range(13):
                 pack.append(Card(face_value, color))
                 if face_value != 0:
                     pack.append(Card(face_value, color))
-        for face_value in range(14, 16):
+        for face_value in range(13, 15):
             for _ in range(4):
                 pack.append(Card(face_value, 4))
         return pack

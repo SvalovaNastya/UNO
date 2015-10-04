@@ -46,4 +46,5 @@ if __name__ == "__main__":
     conn.connect((args.server_ip, args.server_port))
     ui = CUI(args.name)
     conn.send(args.name.encode('utf-8'))
+    print("подключились к серверу")
     run_game(conn)

@@ -178,6 +178,7 @@ class Arbiter:
         for i in range(self.table.players_number):
             conn, _ = self.socket.accept()
             name = conn.recv(1024).decode('utf-8')
+            print("игрок {0} подключился".format(name))
             players.append(Player(conn, name))
         return players
 

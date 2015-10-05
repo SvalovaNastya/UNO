@@ -25,7 +25,7 @@ def run_game(conn):
             if s == 's':
                 ans = {'method': "put_card", 'card': face, 'color': color}
             elif s == "cc":
-                ans = {'method': "change_color", 'card' : face, 'color': color}
+                ans = {'method': "change_color", 'card': face, 'color': color}
             elif s == 'pass':
                 ans = {'method': "pass_step"}
             elif s == 'draw':

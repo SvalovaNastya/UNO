@@ -50,7 +50,7 @@ class CUI:
                     if m not in self.input_colors:
                         mess = "такого цвета нет, введите другой"
                         continue
-                    return "cc", self.input_faces[str[0]], self.input_colors[str[1]]
+                    return "cc", self.input_faces[str[0]], m
             if len(str) != 2:
                 print("error input print 'help'\n")
                 continue

@@ -55,9 +55,18 @@ class Arbiter:
                 raise GameException("В колоде больше нет карт")
         self.players[self.table.current_player].hand.add(card)
 
+    def check_card_in_hand(self, card):
+        if card not in self.players[self.table.current_player].hand:
+            return False
+        else:
+            return True
+
     def put_card(self, card):
         if not can_put_card(card, self.table.upper_card, self.table.current_color):
             raise GameException("Эту карту нельзя положить, выберете другую")
+
+        if not self.check_card_in_hand(card):
+            raise GameException("У вас нет такой карты!!!")
 
         self.players[self.table.current_player].hand.remove(card)
 
@@ -89,6 +98,9 @@ class Arbiter:
             raise GameException("Эту карту нельзя положить, выберете другую")
         unnext = (self.table.players_number + self.table.current_player +
                   2 * self.table.clockwise) % self.table.players_number
+
+        if not self.check_card_in_hand(Card(face, 4)):
+            raise GameException("У вас нет такой карты!!!")
 
         self.players[self.table.current_player].hand.remove(Card(face, 4))
 

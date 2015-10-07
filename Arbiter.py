@@ -49,6 +49,7 @@ class Arbiter:
         card = self.pack_of_cards.get_card()
         if card is None:
             cards = self.table.pick_cards()
+            print("Карты из колоды взялись! Ура")
             self.pack_of_cards.add_cards(cards)
             card = self.pack_of_cards.get_card()
             if card is None:
@@ -181,6 +182,10 @@ class Arbiter:
                     self.players[player_num].change_game_state(game_position)
                 message = "Ваш ход"
                 if self.game_over:
+                    for player_num in range(len(self.players)):
+                        game_position = self.create_map(player_num)
+                        game_position = json.dumps(game_position)
+                        self.players[player_num].change_game_state(game_position)
                     break
             except GameException as e:
                 if len(method) == 0:

@@ -38,6 +38,8 @@ def run_game(conn):
             # print(mess)
             ui.write_table(mess["players"], mess["whos_step"], mess["hand"], mess["direction"], mess["color"],
                            mess["up_curd"], mess["game_over"])
+            if mess["game_over"] == "True":
+                break
 
 
 if __name__ == "__main__":

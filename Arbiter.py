@@ -111,6 +111,8 @@ class Arbiter:
             self.table.current_player = unnext
         else:
             self.table.current_player = self.get_next_player()
+
+        self.table.lay_on(Card(face, 4))
         self.table.current_color = color
 
     def pass_step(self, players_req):

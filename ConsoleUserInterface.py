@@ -29,6 +29,7 @@ class CUI:
             s += '(' + self.faces[card["face_value"]] + ' ' + self.colors[card["color"]] + ") "
         if game_over == "True":
             s += "game over"
+        s += '\n'
         print(s)
 
 
@@ -50,7 +51,7 @@ class CUI:
                     if m not in self.input_colors:
                         mess = "такого цвета нет, введите другой"
                         continue
-                    return "cc", self.input_faces[str[0]], m
+                    return "cc", self.input_faces[str[0]], self.input_colors[m]
             if len(str) != 2:
                 print("error input print 'help'\n")
                 continue

@@ -27,7 +27,7 @@ class PackOfCards:
         if len(self._not_used_cards) == 0:
             return None
         while True:
-            index = self._rand.randint(0, self._number)
+            index = self._rand.randint(0, self._number - 1)
             if self._pack_of_card[index] in self._not_used_cards:
                 self._not_used_cards.remove(self._pack_of_card[index])
                 return self._pack_of_card[index]

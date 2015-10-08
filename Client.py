@@ -2,6 +2,7 @@ import argparse
 import socket
 import json
 from ConsoleUserInterface import CUI
+from SocketSender import SocketSender
 
 
 game_table = {}
@@ -18,7 +19,8 @@ def parse_args():
 
 def run_game(conn):
     while True:
-        mess = conn.recv(1024)
+        mess = SocketSender.recv_all(conn)
+        # conn.recv(1024)
         mess = json.loads(mess.decode("utf-8"), "utf-8")
         if mess["goal"] == 1:
             s, face, color = ui.make_step(mess['message'])
@@ -33,10 +35,11 @@ def run_game(conn):
             else:
                 raise Exception("wtf!")
             a = json.dumps(ans)
-            conn.sendall(a.encode())
+            SocketSender.send_all(conn, a.encode('utf-8'))
+            #conn.sendall(a.encode())
         elif mess["goal"] == 0:
             # print(mess)
-            ui.write_table(mess["players"], mess["whos_step"], mess["hand"], mess["direction"], mess["color"],
+            ui.write_table(mess["players"], mess["who's_step"], mess["hand"], mess["direction"], mess["color"],
                            mess["up_curd"], mess["game_over"])
             if mess["game_over"] == "True":
                 break

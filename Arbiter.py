@@ -126,7 +126,7 @@ class Arbiter:
 
     def create_map(self, player_num):
         game_position = {"goal": 0, "hand": [{'face_value': card.face_value, 'color': card.color} for card in self.players[player_num].hand],
-                         "whos_step": self.table.current_player,
+                         "who's_step": self.table.current_player,
                          "direction": self.table.clockwise, "color": self.table.current_color,
                          "up_curd": self.table.upper_card.face_value, "players": [], "game_over": self.game_over}
 
@@ -135,11 +135,6 @@ class Arbiter:
                 "name": self.players[i].name,
                 "num": len(self.players[i].hand)
             })
-            # n = self.table.current_player
-            # game_position["players"].append({
-            #     "name": self.players[(i + n) % self.table.players_number].name,
-            #     "num": len(self.players[(i + n) % self.table.players_number].hand)
-            # })
         return game_position
 
     def _make_step(self):
@@ -186,6 +181,7 @@ class Arbiter:
                         game_position = self.create_map(player_num)
                         game_position = json.dumps(game_position)
                         self.players[player_num].change_game_state(game_position)
+                    print("dddd")
                     break
             except GameException as e:
                 if len(method) == 0:

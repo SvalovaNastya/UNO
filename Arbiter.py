@@ -48,7 +48,7 @@ class Arbiter:
             raise GameException("Больше нельзя взять карт, вы должны пропустить ход")
         card = self.pack_of_cards.get_card()
         if card is None:
-            cards = self.table.pick_cards()
+            cards = self.table.pick_cards
             print("Карты из колоды взялись! Ура")
             self.pack_of_cards.add_cards(cards)
             card = self.pack_of_cards.get_card()
@@ -125,7 +125,8 @@ class Arbiter:
         self.table.current_player = self.get_next_player()
 
     def create_map(self, player_num):
-        game_position = {"goal": 0, "hand": [{'face_value': card.face_value, 'color': card.color} for card in self.players[player_num].hand],
+        game_position = {"goal": 0, "hand": [{'face_value': card.face_value, 'color': card.color}
+                                             for card in self.players[player_num].hand],
                          "who's_step": self.table.current_player,
                          "direction": self.table.clockwise, "color": self.table.current_color,
                          "up_curd": self.table.upper_card.face_value, "players": [], "game_over": self.game_over}
@@ -138,7 +139,7 @@ class Arbiter:
         return game_position
 
     def _make_step(self):
-        self.table.upper_card = self.pack_of_cards.get_card() #TODO: проверить на то, не сменит ли она цвет
+        self.table.upper_card = self.pack_of_cards.get_card()  # TODO: проверить на то, не сменит ли она цвет
         self.table.current_color = self.table.upper_card.color
         for player in self.players:
             for i in range(4):

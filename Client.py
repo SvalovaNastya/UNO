@@ -17,10 +17,9 @@ def parse_args():
     return parser.parse_args()
 
 
-def run_game(conn):
+def run_game(connect):
     while True:
-        mess = SocketSender.recv_all(conn)
-        # conn.recv(1024)
+        mess = SocketSender.recv_all(connect)
         mess = json.loads(mess.decode("utf-8"), "utf-8")
         if mess["goal"] == 1:
             s, face, color = ui.make_step(mess['message'])
@@ -35,13 +34,11 @@ def run_game(conn):
             else:
                 raise Exception("wtf!")
             a = json.dumps(ans)
-            SocketSender.send_all(conn, a.encode('utf-8'))
-            #conn.sendall(a.encode())
+            SocketSender.send_all(connect, a.encode('utf-8'))
         elif mess["goal"] == 0:
-            # print(mess)
             ui.write_table(mess["players"], mess["who's_step"], mess["hand"], mess["direction"], mess["color"],
                            mess["up_curd"], mess["game_over"])
-            if mess["game_over"] == "True":
+            if mess["game_over"]:
                 break
 
 

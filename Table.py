@@ -12,6 +12,7 @@ class GameTable:
         self.card_on_table.add(self.upper_card)
         self.upper_card = card
 
+    @property
     def pick_cards(self):
         p = [card for card in self.pack_of_cards._pack_of_card]
         self.pack_of_cards._pack_of_card = set()

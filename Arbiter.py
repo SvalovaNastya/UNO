@@ -139,11 +139,25 @@ class Arbiter:
         return game_position
 
     def _make_step(self):
-        self.table.upper_card = self.pack_of_cards.get_card()  # TODO: проверить на то, не сменит ли она цвет
-        self.table.current_color = self.table.upper_card.color
-        for player in self.players:
+        # self.table.upper_card = self.pack_of_cards.get_card()  # TODO: проверить на то, не сменит ли она цвет
+        # self.table.current_color = self.table.upper_card.color
+        for player in self.players[1:]:
             for i in range(4):
                 player.hand.add(self.pack_of_cards.get_card())
+
+        for i in range(3):
+            self.players[0].hand.add(self.pack_of_cards.get_card())
+
+        first_card = self.pack_of_cards.get_card()
+        while first_card.face_value in {10, 11, 12, 13, 14}:
+            self.pack_of_cards.add_cards([first_card])
+            first_card = self.pack_of_cards.get_card()
+
+        self.table.upper_card = first_card
+        self.table.current_color = self.table.upper_card.color
+
+        self.table.current_player = (self.table.current_player + 1) % self.table.players_number
+
         message = "Ваш ход"
         players_req = 0
         for player_num in range(len(self.players)):

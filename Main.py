@@ -1,5 +1,7 @@
-from Arbiter import Arbiter
+from arbiter import Arbiter
 
 if __name__ == "__main__":
-    arbiter = Arbiter(2)
-    arbiter.game()
+    arbiter = Arbiter()
+    players = arbiter.wait_players()
+    arbiter.players = players
+    arbiter.run_game()

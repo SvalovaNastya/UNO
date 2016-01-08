@@ -1,0 +1,1 @@
+PLAYERS_NUMBER = 2

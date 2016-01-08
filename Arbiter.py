@@ -1,9 +1,9 @@
-from PackOfCards import PackOfCards
-from Table import GameTable
-from Player import Player
-from Card import Card
-import json
+from pack_of_cards import PackOfCards
+from table import GameTable
+from player import Player
+from card import Card
 import socket
+import config
 
 
 def can_put_card(card, upper_card, current_color):
@@ -14,7 +14,7 @@ def can_put_card(card, upper_card, current_color):
     return True
 
 
-def can_pass_step(hand, upper_card, current_color):
+def can_pass_turn(hand, upper_card, current_color):
     for card in hand:
         if (card.color == current_color or card.face_value == upper_card.face_value or
                     card.face_value == 14 or card.face_value == 13):
@@ -28,32 +28,61 @@ class GameException(Exception):
 
 
 class Arbiter:
-    def __init__(self, players_number):
-        self.pack_of_cards = PackOfCards()
-        self.table = GameTable(players_number, self.pack_of_cards)
+    def __init__(self):
+        self._pack_of_cards = PackOfCards()
+        self.table = GameTable(config.PLAYERS_NUMBER)
         self.socket = self._make_connection()
-        self.players = self._wait_players()
-        self.game_over = False
+        self.players = []
+        self._game_over = False
 
-    def game(self):
-        while not self.game_over:
-            self._make_step()
+    def run_game(self):
+        for player in self.players[1:]:
+            for i in range(4):
+                player.hand.add(self._pack_of_cards.get_card())
 
-    def get_next_player(self):
+        for i in range(3):
+            self.players[0].hand.add(self._pack_of_cards.get_card())
+
+        first_card = self._pack_of_cards.get_card()
+        while first_card.face_value in {10, 11, 12, 13, 14}:
+            self._pack_of_cards.add_card(first_card)
+            first_card = self._pack_of_cards.get_card()
+
+        self.table.upper_card = first_card
+        self.table.current_color = self.table.upper_card.color
+
+        self.table.current_player = (self.table.current_player + 1) % self.table.players_number
+
+        turn_params = {"message": "Your turn", "players_req": 0}
+        for player_num in range(len(self.players)):
+            game_position = self._create_map(player_num)
+            self.players[player_num].change_game_state(game_position)
+        while not self._game_over:
+            turn_params = self._make_turn(turn_params)
+        self._complete_game()
+
+    def _get_next_player(self):
         return (self.table.players_number + self.table.current_player + self.table.clockwise) \
                % self.table.players_number
 
-    def draw_card(self, players_req):
+    def _get_used_cards(self):
+        cards = set()
+        for player in self.players:
+            for card in player.hand:
+                cards.add(card)
+        cards.add(self.table.upper_card)
+        return cards
+
+    def _draw_card(self, players_req):
         if players_req > 0:
-            raise GameException("Больше нельзя взять карт, вы должны пропустить ход")
-        card = self.pack_of_cards.get_card()
+            raise GameException("You draw cards enough, please, put card or pass turn!")
+        card = self._pack_of_cards.get_card()
         if card is None:
-            cards = self.table.pick_cards
-            print("Карты из колоды взялись! Ура")
-            self.pack_of_cards.add_cards(cards)
-            card = self.pack_of_cards.get_card()
+            cards = self._get_used_cards()
+            self._pack_of_cards.create_new_pack(cards)
+            card = self._pack_of_cards.get_card()
             if card is None:
-                raise GameException("В колоде больше нет карт")
+                raise GameException("The pack has no more cards")
         self.players[self.table.current_player].hand.add(card)
 
     def check_card_in_hand(self, card):
@@ -62,74 +91,75 @@ class Arbiter:
         else:
             return True
 
-    def put_card(self, card):
+    def _add_next_player_cards(self, count):
+        for i in range(count):
+            new_card = self._pack_of_cards.get_card()
+            self.players[self._get_next_player()].hand.add(new_card)
+
+    def _put_card(self, card):
         if not can_put_card(card, self.table.upper_card, self.table.current_color):
-            raise GameException("Эту карту нельзя положить, выберете другую")
+            raise GameException("You can't put this card, please, choice another")
 
         if not self.check_card_in_hand(card):
-            raise GameException("У вас нет такой карты!!!")
+            raise GameException("You haven't this card!!!")
 
         self.players[self.table.current_player].hand.remove(card)
 
-        unnext = (self.table.players_number + self.table.current_player +
+        after_next = (self.table.players_number + self.table.current_player +
                   2 * self.table.clockwise) % self.table.players_number
 
         if card.face_value == 12:
-            for i in range(2):
-                new_card = self.pack_of_cards.get_card()
-                self.players[self.get_next_player()].hand.add(new_card)
-            self.table.current_player = unnext
+            self._add_next_player_cards(2)
+            self.table.current_player = after_next
 
         elif card.face_value == 11:
             self.table.change_clockwise()
-            self.table.current_player = self.get_next_player()
+            self.table.current_player = self._get_next_player()
 
         elif card.face_value == 10:
-            self.table.current_player = unnext
+            self.table.current_player = after_next
 
         else:
-            self.table.current_player = self.get_next_player()
+            self.table.current_player = self._get_next_player()
 
         self.table.lay_on(card)
         if card.color != 5:
             self.table.current_color = card.color
 
-    def change_color(self, face, color):
+    def _change_color(self, face, color):
         if not can_put_card(Card(face, 4), self.table.upper_card, self.table.current_color):
-            raise GameException("Эту карту нельзя положить, выберете другую")
+            raise GameException("You can't put this card, please, choice another")
         unnext = (self.table.players_number + self.table.current_player +
                   2 * self.table.clockwise) % self.table.players_number
 
         if not self.check_card_in_hand(Card(face, 4)):
-            raise GameException("У вас нет такой карты!!!")
+            raise GameException("You haven't this card!!!")
 
         self.players[self.table.current_player].hand.remove(Card(face, 4))
 
         if face == 13:
-            for i in range(4):
-                new_card = self.pack_of_cards.get_card()
-                self.players[self.get_next_player()].hand.add(new_card)
+            self._add_next_player_cards(4)
             self.table.current_player = unnext
         else:
-            self.table.current_player = self.get_next_player()
+            self.table.current_player = self._get_next_player()
 
         self.table.lay_on(Card(face, 4))
         self.table.current_color = color
 
-    def pass_step(self, players_req):
+    def _pass_turn(self, players_req):
         if players_req == 0:
-            raise GameException("Вы должны сначала взять карту")
-        if not can_pass_step(self.players[self.table.current_player].hand, self.table.upper_card,
+            raise GameException("Firstly, you mast draw a card")
+        if not can_pass_turn(self.players[self.table.current_player].hand, self.table.upper_card,
                              self.table.current_color):
-            raise GameException("Вы не можете пропустить ход, у вас есть нужные карты")
-        self.table.current_player = self.get_next_player()
+            raise GameException("You can't pass turn, you have the right cards")
+        self.table.current_player = self._get_next_player()
 
-    def create_map(self, player_num):
+    def _create_map(self, player_num):
         game_position = {"goal": 0, "hand": [{'face_value': card.face_value, 'color': card.color}
                                              for card in self.players[player_num].hand],
-                         "who's_step": self.table.current_player,
+                         "who's_turn": self.table.current_player,
                          "direction": self.table.clockwise, "color": self.table.current_color,
-                         "up_curd": self.table.upper_card.face_value, "players": [], "game_over": self.game_over}
+                         "up_card": self.table.upper_card.face_value, "players": [], "_game_over": self._game_over}
 
         for i in range(0, self.table.players_number):
             game_position["players"].append({
@@ -138,72 +168,45 @@ class Arbiter:
             })
         return game_position
 
-    def _make_step(self):
-        # self.table.upper_card = self.pack_of_cards.get_card()  # TODO: проверить на то, не сменит ли она цвет
-        # self.table.current_color = self.table.upper_card.color
-        for player in self.players[1:]:
-            for i in range(4):
-                player.hand.add(self.pack_of_cards.get_card())
+    def _complete_game(self):
+        if self._game_over:
+            for player_num in range(len(self.players)):
+                game_position = self._create_map(player_num)
+                self.players[player_num].change_game_state(game_position)
 
-        for i in range(3):
-            self.players[0].hand.add(self.pack_of_cards.get_card())
+    def _make_turn(self, turn_params):
+        turn_info = self.players[self.table.current_player].make_turn(turn_params["message"])
+        try:
+            if turn_info["method"] == "pass_turn":
+                self._pass_turn(turn_params["players_req"])
+                turn_params["players_req"] = 0
 
-        first_card = self.pack_of_cards.get_card()
-        while first_card.face_value in {10, 11, 12, 13, 14}:
-            self.pack_of_cards.add_cards([first_card])
-            first_card = self.pack_of_cards.get_card()
+            elif turn_info["method"] == "draw_card":
+                self._draw_card(turn_params["players_req"])
+                turn_params["players_req"] += 1
 
-        self.table.upper_card = first_card
-        self.table.current_color = self.table.upper_card.color
+            elif turn_info["method"] == "change_color":
+                self._change_color(turn_info["card"], turn_info["color"])
+                turn_params["players_req"] = 0
 
-        self.table.current_player = (self.table.current_player + 1) % self.table.players_number
+            elif turn_info["method"] == "put_card":
+                self._put_card(Card(turn_info["card"], turn_info["color"]))
+                turn_params["players_req"] = 0
+            else:
+                raise GameException("incorrect command")
 
-        message = "Ваш ход"
-        players_req = 0
-        for player_num in range(len(self.players)):
-            game_position = self.create_map(player_num)
-            game_position = json.dumps(game_position)
-            self.players[player_num].change_game_state(game_position)
-        while True:
-            method = self.players[self.table.current_player].make_step(message)
-            try:
-                if method[0] == "pass_step":
-                    self.pass_step(players_req)
-                    players_req = 0
+            self._game_over = self._check_for_over()
+            for player_num in range(len(self.players)):
+                game_position = self._create_map(player_num)
+                self.players[player_num].change_game_state(game_position)
+            turn_params["message"] = "Your turn"
+        except GameException as e:
+            if 'method' not in turn_info:
+                turn_params["players_req"] += 1
+            turn_params["message"] = e.mess
+        return turn_params
 
-                elif method[0] == "draw_card":
-                    self.draw_card(players_req)
-                    players_req += 1
-
-                elif method[0] == "change_color":
-                    self.change_color(method[1], method[2])
-                    players_req = 0
-
-                elif method[0] == "put_card":
-                    self.put_card(Card(method[1], method[2]))
-                    players_req = 0
-                else:
-                    raise GameException("incorrect command")
-
-                self.game_over = self.check_for_over()
-                for player_num in range(len(self.players)):
-                    game_position = self.create_map(player_num)
-                    game_position = json.dumps(game_position)
-                    self.players[player_num].change_game_state(game_position)
-                message = "Ваш ход"
-                if self.game_over:
-                    for player_num in range(len(self.players)):
-                        game_position = self.create_map(player_num)
-                        game_position = json.dumps(game_position)
-                        self.players[player_num].change_game_state(game_position)
-                    print("dddd")
-                    break
-            except GameException as e:
-                if len(method) == 0:
-                    players_req += 1
-                message = e.mess
-
-    def _wait_players(self):
+    def wait_players(self):
         players = []
         for i in range(self.table.players_number):
             conn, _ = self.socket.accept()
@@ -215,13 +218,11 @@ class Arbiter:
     def _make_connection(self):
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        # s.connect(("gmail.com", 80))
-        # print("your address: " + s.getsockname()[0])
         s.bind(("0.0.0.0", 4000))
         s.listen(self.table.players_number)
         return s
 
-    def check_for_over(self):
+    def _check_for_over(self):
         for player in self.players:
             if len(player.hand) == 0:
                 return True

@@ -9,11 +9,11 @@ class SocketSender:
         sock.sendall(message)
 
     @staticmethod
-    def _recv_while_not_full_buffer(sock, buffer):
+    def _recv_while_not_full_buffer(sock, buffer_size):
         while True:
-            ans = sock.recv(buffer)
-            if len(ans) < buffer:
-                buffer -= len(ans)
+            ans = sock.recv(buffer_size)
+            if len(ans) < buffer_size:
+                buffer_size -= len(ans)
             else:
                 return ans
 
